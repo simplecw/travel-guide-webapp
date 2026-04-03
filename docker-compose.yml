@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  # --- 后端 API 服务 ---
+  travel-api:
+    build: ./backend
+    container_name: travel-api
+    restart: always
+    ports:
+      - "5011:5011"
+    environment:
+      - DB_HOST=192.168.1.108
+      - DB_PORT=3306
+      - DB_USER=chenwei
+      - DB_PASS=761211
+      - DB_NAME=travel_planner
+    volumes:
+      - ./backend:/app
+    # 保持你原有的启动命令，注意端口 5011
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 5011
+      --reload
+
+  # --- 前端 React 服务 ---
+  travel-web:
+    build: ./frontend
+    container_name: travel-web
+    restart: always
+    ports:
+      - "3001:5173"  # 将容器内的 Vite 端口 5173 映射到宿主机的 3000
+    volumes:
+      - ./frontend:/app
+      # 防止容器内的 node_modules 被宿主机覆盖（可选，视环境而定）
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5011
+    # 确保 Vite 能够响应 Docker 映射
+    command: npm run dev -- --host 0.0.0.0
